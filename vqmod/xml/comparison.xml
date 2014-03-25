@@ -1,0 +1,109 @@
+<modification>
+	<id>Comparison</id>
+	<version>1.1.1</version>
+	<vqmver>2.X</vqmver>
+	<author>Trojan</author>	
+	<file name="catalog/controller/common/header.php">
+		<operation error="skip">
+			<search position="after" ><![CDATA[protected function index() {]]></search>
+			<add><![CDATA[
+				$this->document->addScript('catalog/view/javascript/jquery/colorbox/jquery.colorbox-min.js');
+				$this->document->addStyle('catalog/view/javascript/jquery/colorbox/colorbox.css');
+			]]></add>
+		</operation>
+		<operation error="skip">
+			<search position="after" ><![CDATA[$this->data['text_home'] = $this->language->get('text_home');]]></search>
+			<add><![CDATA[
+				$this->language->load('product/compare');
+				$this->data['text_compare'] = sprintf($this->language->get('text_compare'), (isset($this->session->data['compare']) ? count($this->session->data['compare']) : 0));
+				$this->data['text_empty'] = $this->language->get('text_empty');
+			]]></add>
+		</operation>
+	</file>
+	
+	<file name="catalog/language/english/product/compare.php">
+		<operation error="skip">
+			<search position="replace" trim="true"><![CDATA[$_['text_success']      = 'Success: You have added <a href="%s">%s</a> to your <a href="%s">product comparison</a>!';]]></search>
+			<add><![CDATA[$_['text_success']      = 'Success: You have added <a href="%s">%s</a> to your <a onclick="openCompareLink(this); return false;" href="%s">product comparison</a>!';]]></add>
+		</operation>
+	</file>
+    
+    <file name="catalog/view/theme/*/template/common/header.tpl">
+        <operation error="skip">
+            <search position="after"><![CDATA[<div id="notification"></div>]]></search>
+            <add>
+                <![CDATA[
+					<script type="text/javascript">						
+						$('.links a').eq(0).after('<a href="javascript:" id="compare-total"><?php echo $text_compare; ?></a>');
+						
+						$('#compare-total').click(function (){
+							$.ajax({
+								url: '<?php echo $this->url->link('product/compare');?>',
+								dataType: 'html',
+								beforeSend: function() {
+									$('#compare-total').after('<span class="wait" style="float: left;">&nbsp;<img src="catalog/view/theme/default/image/loading.gif" alt="" /></span>');
+								},		
+								complete: function() {
+									$('.wait').remove();
+								},
+								success: function(html) {
+									if ($(html).find('.compare-info').size()) {
+										$.colorbox({
+											overlayClose: true,
+											opacity: 0.5,
+											width: '90%',
+											height: '90%',
+											href: false,
+											html: $(html).find('.compare-info')
+										});
+									}
+									else {
+										alert('<?php echo $text_empty;?>');
+									}
+								},
+								error: function(xhr, ajaxOptions, thrownError) {
+									alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+								}
+							});	
+						});
+						
+						function openCompareLink(el) {
+							var link = $(el).attr('href');
+							$(el).attr('class', 'compare-link');
+							
+							$.ajax({
+								url: link,
+								dataType: 'html',
+								beforeSend: function() {
+									$('.compare-link').after('<span class="wait">&nbsp;<img src="catalog/view/theme/default/image/loading.gif" alt="" /></span>');
+								},		
+								complete: function() {
+									$('.wait').remove();
+								},
+								success: function(html) {
+									if ($(html).find('.compare-info').size()) {
+										$.colorbox({
+											overlayClose: true,
+											opacity: 0.5,
+											width: '90%',
+											height: '90%',
+											href: false,
+											html: $(html).find('.compare-info')
+										});
+									}
+									else {
+										alert('<?php echo $text_empty;?>');
+									}
+								},
+								error: function(xhr, ajaxOptions, thrownError) {
+									alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+								}
+							});	
+						}
+					</script>
+                ]]>
+            </add>
+        </operation>
+    </file>
+    
+</modification>
